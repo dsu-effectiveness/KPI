@@ -1,0 +1,30 @@
+---
+title: "KPI"
+author: "Joy Baule"
+date: "2/21/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(utHelpR)
+library(utDataStoR)
+```
+
+# To create the standard folder structure
+utHelpR::make_standard_folders()
+
+# To load the term to term query
+utDataStoR::make_retention_sql(
+  name = 'my_retention_query.sql', 
+  type = 'term_to_term'
+  )
+  
+# To load the cohort query
+utDataStoR::make_retention_sql(
+  name = 'my_retention_query.sql', 
+  type = 'cohort'
+  )
