@@ -1,0 +1,65 @@
+---
+title: "Cohort Retention"
+date: "2023-02-16"
+output: html_document
+---
+
+```{r set global chunks, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE, 
+  message = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+library(utHelpR)
+library(here)
+library(scales)
+```
+
+<!-- Don't display this chunk -->
+```{r load data, echo = FALSE}
+cohort_retention_sql <- get_data_from_sql_file('cohort_retention.sql', 'edify')
+```
+
+How to calculate cohort retention rate
+```{r}
+cohort_retention <- cohort_retention_sql %>% 
+  filter(cohort_start_term_id != '202240') %>% 
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
+         is_returned_next_fall,
+         is_graduated_year_1) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_graduated_year_1 | is_returned_next_fall) %>% 
+  select(-is_returned_next_fall, -is_graduated_year_1, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate = percent(positive/total))
+```
+
+```{r}
+cohort_retention <- cohort_retention_sql %>% 
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
+         ipeds_race_ethnicity,
+         is_returned_fall_4,
+         is_degree_completer_3) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_degree_completer_3 | is_returned_fall_4) %>% 
+  select(-is_returned_fall_4, -is_degree_completer_3, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome, ipeds_race_ethnicity) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate = percent(positive/total))
+```
