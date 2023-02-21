@@ -13,6 +13,9 @@
            -- Fourth fall return rate
            a.is_returned_fall_4,
            a.is_degree_completer_3,
+           -- Fifth fall return rate
+           a.is_returned_fall_5,
+           a.is_degree_completer_4,
            c.primary_major_desc,
            c.primary_degree_id,
            c.primary_degree_desc,

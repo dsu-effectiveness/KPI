@@ -1,0 +1,49 @@
+---
+title: "term_to_term_sample"
+author: "Joy Baule"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r set global chunks, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE, 
+  message = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+library(utHelpR)
+library(here)
+library(scales)
+```
+
+
+Term to Term Retention
+<!-- Don't display this chunk -->
+```{r load data, echo = FALSE}
+term_to_term_retention <- get_data_from_sql_file('term_to_term_retention.sql', 'edify')
+```
+
+Term to Term Retention by College
+```{r}
+term_to_term_ret_college <- term_to_term_retention %>% 
+  filter(term_id == '201840') %>% 
+  select(student_id,
+         term_id,
+         is_returned_next_spring,
+         is_returned_next_fall,
+         college_desc,
+         is_exclusion) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_returned_next_spring | is_returned_next_fall) %>% 
+  select(-is_returned_next_fall, -is_returned_next_spring, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(term_id, positive_outcome, college_desc) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(term_to_term_retention_rate = percent(positive/total))
+```

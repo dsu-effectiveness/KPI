@@ -20,12 +20,12 @@ library(scales)
 
 <!-- Don't display this chunk -->
 ```{r load data, echo = FALSE}
-cohort_retention_sql <- get_data_from_sql_file('cohort_retention.sql', 'edify')
+cohort <- get_data_from_sql_file('cohort.sql', 'edify')
 ```
 
-How to calculate cohort retention rate
+Cohort retention rate - cohort start to next returning fall -  multiple cohorts
 ```{r}
-cohort_retention <- cohort_retention_sql %>% 
+cohorts_retention <- cohort %>% 
   filter(cohort_start_term_id != '202240') %>% 
   select(student_id,
          is_exclusion,
@@ -44,12 +44,59 @@ cohort_retention <- cohort_retention_sql %>%
   mutate(cohort_retention_rate = percent(positive/total))
 ```
 
+Cohort retention rate: Cohort Fall start to next returning Fall - One cohort
 ```{r}
-cohort_retention <- cohort_retention_sql %>% 
+cohort_start_ret_fall <- cohort %>% 
+  filter(cohort_start_term_id =='201840') %>% 
   select(student_id,
          is_exclusion,
          cohort_start_term_id,
-         ipeds_race_ethnicity,
+         is_returned_next_fall,
+         is_graduated_year_1) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_graduated_year_1 | is_returned_next_fall) %>% 
+  select(-is_returned_next_fall, -is_graduated_year_1, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate = percent(positive/total))
+```
+
+
+
+Cohort retention rate: Fall 3
+```{r}
+cohort_Fall_3 <- cohort %>% 
+  filter(cohort_start_term_id == '201840') %>% 
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
+         is_returned_fall_3,
+         is_degree_completer_2) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_degree_completer_2 | is_returned_fall_3) %>% 
+  select(-is_returned_fall_3, -is_degree_completer_2, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate_fall_3 = percent(positive/total))
+
+```
+
+
+Cohort retention rate: Fall 4
+```{r}
+cohort_Fall_4 <- cohort %>% 
+  filter(cohort_start_term_id == '201840') %>% 
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
          is_returned_fall_4,
          is_degree_completer_3) %>% 
   filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
@@ -57,9 +104,84 @@ cohort_retention <- cohort_retention_sql %>%
   mutate(positive_outcome = is_degree_completer_3 | is_returned_fall_4) %>% 
   select(-is_returned_fall_4, -is_degree_completer_3, -student_id) %>% 
   mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate_fall_4 = percent(positive/total))
+
+```
+
+
+Cohort retention rate: Fall 5
+```{r}
+cohort_Fall_5 <- cohort %>% 
+  filter(cohort_start_term_id == '201840') %>% 
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
+         is_returned_fall_5,
+         is_degree_completer_4) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_degree_completer_4 | is_returned_fall_5) %>% 
+  select(-is_returned_fall_5, -is_degree_completer_4, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate_fall_5 = percent(positive/total))
+
+```
+
+
+Cohort by race/ethnicity
+```{r}
+cohort_race_eth <- cohort %>% 
+  filter(cohort_start_term_id != '202240') %>%
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
+         ipeds_race_ethnicity,
+         is_returned_next_fall,
+         is_graduated_year_1) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_graduated_year_1 | is_returned_next_fall) %>% 
+  select(-is_returned_next_fall, -is_graduated_year_1, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
   group_by(cohort_start_term_id, positive_outcome, ipeds_race_ethnicity) %>% 
   summarise(count = n()) %>% 
   pivot_wider(names_from = positive_outcome, values_from = count) %>% 
   mutate(total = positive + negative) %>% 
   mutate(cohort_retention_rate = percent(positive/total))
 ```
+
+Cohort-Veterans
+```{r}
+cohort_vet <- cohort %>% 
+  filter(cohort_start_term_id != '202240',
+         is_veteran == 'TRUE') %>%
+  select(student_id,
+         is_exclusion,
+         cohort_start_term_id,
+         is_veteran,
+         is_returned_next_fall,
+         is_graduated_year_1) %>% 
+  filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
+  select(-is_exclusion) %>% 
+  mutate(positive_outcome = is_graduated_year_1 | is_returned_next_fall) %>% 
+  select(-is_returned_next_fall, -is_graduated_year_1, -student_id) %>% 
+  mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
+  group_by(cohort_start_term_id, positive_outcome, is_veteran) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = positive_outcome, values_from = count) %>% 
+  mutate(total = positive + negative) %>% 
+  mutate(cohort_retention_rate = percent(positive/total))
+```
+
+
+
+
+
