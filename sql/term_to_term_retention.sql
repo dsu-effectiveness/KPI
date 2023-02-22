@@ -27,7 +27,8 @@ LEFT JOIN export.term b
 LEFT JOIN export.student_term_level_version c
        ON c.student_id = a.student_id
       AND c.term_id = a.term_id
-      AND c.is_enrolled
+      --AND c.is_enrolled
+      AND c.is_enrolled_census --Use this for census enrollment.
       AND c.is_primary_level
       AND c.is_census_version
 LEFT JOIN export.academic_programs d

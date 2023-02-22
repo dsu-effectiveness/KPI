@@ -26,22 +26,23 @@ Term to Term Retention
 term_to_term_retention <- get_data_from_sql_file('term_to_term_retention.sql', 'edify')
 ```
 
-Term to Term Retention by College
+Term to Term Retention by College & Major
 ```{r}
 term_to_term_ret_college <- term_to_term_retention %>% 
-  filter(term_id == '201840') %>% 
+  filter(term_id == '201940') %>% 
   select(student_id,
          term_id,
          is_returned_next_spring,
          is_returned_next_fall,
          college_desc,
+         primary_major_desc,
          is_exclusion) %>% 
   filter(is_exclusion == FALSE) %>% # Take out the exclusion students from the entire calculation
   select(-is_exclusion) %>% 
   mutate(positive_outcome = is_returned_next_spring | is_returned_next_fall) %>% 
   select(-is_returned_next_fall, -is_returned_next_spring, -student_id) %>% 
   mutate(positive_outcome = if_else(positive_outcome, 'positive', 'negative')) %>% 
-  group_by(term_id, positive_outcome, college_desc) %>% 
+  group_by(term_id, positive_outcome, college_desc, primary_major_desc) %>% 
   summarise(count = n()) %>% 
   pivot_wider(names_from = positive_outcome, values_from = count) %>% 
   mutate(total = positive + negative) %>% 
